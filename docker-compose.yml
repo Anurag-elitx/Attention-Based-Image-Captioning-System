@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: captioning_api
+    restart: always
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://user:password@db:5432/captiondb}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEVICE=cpu
+      - HF_MODEL_REPO=${HF_MODEL_REPO}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - model_cache:/app/checkpoints
+      - output_data:/app/data/outputs
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: captioning_web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  db:
+    image: postgres:15-alpine
+    container_name: captioning_db
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d captiondb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: captiondb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+  model_cache:
+  output_data:
