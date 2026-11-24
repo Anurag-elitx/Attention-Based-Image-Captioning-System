@@ -17,6 +17,17 @@ except OSError as e:
 except ImportError:
     TORCH_AVAILABLE = False
 
+try:
+    import spaces
+except Exception:
+    class MockSpaces:
+        def GPU(self, fn=None, duration=None):
+            if fn is not None:
+                return fn
+            return lambda f: f
+    spaces = MockSpaces()
+
+@spaces.GPU
 def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=5):
     """
     Reads an image and captions it with beam search.

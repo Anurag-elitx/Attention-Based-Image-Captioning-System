@@ -11,6 +11,37 @@ if BACKEND_DIR not in sys.path:
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
+# Hugging Face ZeroGPU compatibility
+try:
+    import spaces
+except Exception:
+    class MockSpaces:
+        def GPU(self, fn=None, duration=None):
+            if fn is not None:
+                return fn
+            return lambda f: f
+    spaces = MockSpaces()
+
+# Top-level @spaces.GPU function for Hugging Face ZeroGPU supervisor
+@spaces.GPU
+def predict_caption(image_input):
+    from app.services.inference_engine import engine
+    engine.load_model()
+    if hasattr(image_input, "save"):
+        temp_img = "temp_gradio.jpg"
+        image_input.save(temp_img)
+        path = temp_img
+    else:
+        path = str(image_input)
+    tokens, alphas, conf = engine.caption(path)
+    if path == "temp_gradio.jpg" and os.path.exists("temp_gradio.jpg"):
+        try:
+            os.remove("temp_gradio.jpg")
+        except OSError:
+            pass
+    clean = " ".join([t for t in tokens if t not in ["<start>", "<end>", "<pad>"]])
+    return clean, alphas, conf
+
 # Auto-download model weights if missing
 ckpt_file = os.path.join(BASE_DIR, "checkpoints", "decoder_best.pt")
 if not os.path.exists(ckpt_file):
@@ -30,18 +61,8 @@ try:
     def gradio_caption(image):
         if image is None:
             return "Please upload an image."
-        from app.services.inference_engine import engine
-        engine.load_model()
-        temp_img = "temp_gradio.jpg"
-        image.save(temp_img)
-        tokens, alphas, conf = engine.caption(temp_img)
-        if os.path.exists(temp_img):
-            try:
-                os.remove(temp_img)
-            except OSError:
-                pass
-        clean = " ".join([t for t in tokens if t not in ["<start>", "<end>", "<pad>"]])
-        return f"{clean} (Confidence: {conf*100:.1f}%)"
+        caption, _, conf = predict_caption(image)
+        return f"{caption} (Confidence: {conf*100:.1f}%)"
 
     demo = gr.Interface(
         fn=gradio_caption,
