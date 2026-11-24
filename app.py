@@ -57,6 +57,7 @@ from app.main import app as fastapi_app
 try:
     import gradio as gr
 
+    @spaces.GPU
     def gradio_caption(image):
         if image is None:
             return "Please upload an image."
