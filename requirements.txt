@@ -14,3 +14,4 @@ httpx>=0.27.0
 gradio>=4.44.0
 torch
 torchvision
+spaces; sys_platform == 'linux'
