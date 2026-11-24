@@ -1,16 +1,30 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Camera, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Camera, Mail, Lock, User, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Auth logic will go here
-    console.log('Register attempt', { username, email, password });
+    setError('');
+    setIsLoading(true);
+    try {
+      await register({ username, email, password });
+      navigate('/');
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to create account. Please try again.';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -31,6 +45,13 @@ export function RegisterPage() {
             
             <h2 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">Create Account</h2>
             <p className="text-center text-slate-500 dark:text-slate-400 mb-8">Join NeuralCaption today</p>
+
+            {error && (
+              <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 flex items-start space-x-3 text-red-700 dark:text-red-400 text-sm animate-fade-in">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
             
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
@@ -86,10 +107,20 @@ export function RegisterPage() {
               
               <button
                 type="submit"
-                className="w-full flex items-center justify-center space-x-2 py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transform hover:-translate-y-0.5 transition-all duration-300"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center space-x-2 py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                <span>Create Account</span>
-                <ArrowRight size={18} />
+                {isLoading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Creating Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create Account</span>
+                    <ArrowRight size={18} />
+                  </>
+                )}
               </button>
             </form>
             
