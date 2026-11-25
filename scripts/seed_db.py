@@ -1,5 +1,11 @@
 import os
 import sys
+
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except Exception:
+    pass
+
 from sqlmodel import Session, select
 from passlib.context import CryptContext
 
