@@ -20,63 +20,67 @@ if not os.path.exists(ckpt_file):
 print("Seeding database...")
 subprocess.run([sys.executable, os.path.join(BASE_DIR, "scripts", "seed_db.py")], check=False)
 
-# Hugging Face ZeroGPU setup
-try:
-    import spaces
-except Exception:
-    class MockSpaces:
-        def GPU(self, fn=None, duration=None):
-            if fn is not None:
-                return fn
-            return lambda f: f
-    spaces = MockSpaces()
-
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from app.main import app as fastapi_app
 
-try:
-    import gradio as gr
-
-    @spaces.GPU
-    def gradio_caption(image):
-        if image is None:
-            return "Please upload an image."
-        from app.services.inference_engine import engine
-        engine.load_model()
-        temp_img = "temp_gradio.jpg"
-        image.save(temp_img)
-        tokens, alphas, conf = engine.caption(temp_img)
-        if os.path.exists(temp_img):
-            try:
-                os.remove(temp_img)
-            except OSError:
-                pass
-        clean = " ".join([t for t in tokens if t not in ["<start>", "<end>", "<pad>"]])
-        return f"{clean} (Confidence: {conf*100:.1f}%)"
-
-    demo = gr.Interface(
-        fn=gradio_caption,
-        inputs=gr.Image(type="pil"),
-        outputs=gr.Textbox(label="Generated Caption"),
-        title="Attention-Based Image Captioning API",
-        description="FastAPI Backend & Interactive Preview for Attention-Based Image Captioning System. Powers the React Frontend on Vercel via /api/v1!"
-    )
-
-    demo.app.include_router(fastapi_app.router)
-    demo.app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    uploads_dir = os.path.join(BASE_DIR, "data", "outputs", "uploads")
-    os.makedirs(uploads_dir, exist_ok=True)
-    demo.app.mount("/static/uploads", StaticFiles(directory=uploads_dir), name="uploads")
-    GRADIO_AVAILABLE = True
-except ImportError:
+# On Render, completely bypass Gradio initialization to save ~180MB RAM
+if os.getenv("RENDER"):
     GRADIO_AVAILABLE = False
+else:
+    try:
+        import spaces
+    except Exception:
+        class MockSpaces:
+            def GPU(self, fn=None, duration=None):
+                if fn is not None:
+                    return fn
+                return lambda f: f
+        spaces = MockSpaces()
+
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.staticfiles import StaticFiles
+
+    try:
+        import gradio as gr
+
+        @spaces.GPU
+        def gradio_caption(image):
+            if image is None:
+                return "Please upload an image."
+            from app.services.inference_engine import engine
+            engine.load_model()
+            temp_img = "temp_gradio.jpg"
+            image.save(temp_img)
+            tokens, alphas, conf = engine.caption(temp_img)
+            if os.path.exists(temp_img):
+                try:
+                    os.remove(temp_img)
+                except OSError:
+                    pass
+            clean = " ".join([t for t in tokens if t not in ["<start>", "<end>", "<pad>"]])
+            return f"{clean} (Confidence: {conf*100:.1f}%)"
+
+        demo = gr.Interface(
+            fn=gradio_caption,
+            inputs=gr.Image(type="pil"),
+            outputs=gr.Textbox(label="Generated Caption"),
+            title="Attention-Based Image Captioning API",
+            description="FastAPI Backend & Interactive Preview for Attention-Based Image Captioning System. Powers the React Frontend on Vercel via /api/v1!"
+        )
+
+        demo.app.include_router(fastapi_app.router)
+        demo.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        uploads_dir = os.path.join(BASE_DIR, "data", "outputs", "uploads")
+        os.makedirs(uploads_dir, exist_ok=True)
+        demo.app.mount("/static/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+        GRADIO_AVAILABLE = True
+    except ImportError:
+        GRADIO_AVAILABLE = False
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
