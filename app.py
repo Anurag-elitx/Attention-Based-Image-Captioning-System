@@ -79,9 +79,9 @@ except ImportError:
     GRADIO_AVAILABLE = False
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 7860))
-    if GRADIO_AVAILABLE:
-        demo.launch(server_name="0.0.0.0", server_port=port)
-    else:
+    port = int(os.environ.get("PORT", 8000))
+    if os.getenv("RENDER") or not GRADIO_AVAILABLE:
         import uvicorn
         uvicorn.run(fastapi_app, host="0.0.0.0", port=port)
+    else:
+        demo.launch(server_name="0.0.0.0", server_port=port)
