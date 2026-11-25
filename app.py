@@ -2,12 +2,6 @@ import os
 import sys
 import subprocess
 
-# Ensure unbuffered output so logs appear instantly in Render/Cloud consoles
-try:
-    sys.stdout.reconfigure(line_buffering=True)
-except Exception:
-    pass
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.join(BASE_DIR, "backend")
 

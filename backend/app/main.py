@@ -23,9 +23,8 @@ from app.routers import auth, system, caption, evaluation
 async def lifespan(app: FastAPI):
     # Startup
     init_db()
-    # Load the ML model
-    from app.services.inference_engine import engine
-    engine.load_model()
+    # Lazy model loading: models are loaded on-demand in InferenceEngine
+    # to keep startup memory well under the 512MB RAM limit on free hosting tiers
     yield
     # Shutdown
     # Resources will be cleared when process dies

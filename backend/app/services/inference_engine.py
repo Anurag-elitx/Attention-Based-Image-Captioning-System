@@ -22,7 +22,10 @@ class InferenceEngine:
         return cls._instance
 
     def load_model(self):
-        print("Loading ML models...")
+        if self.encoder is not None and self.decoder is not None and self.word_map is not None:
+            return
+            
+        print("Loading ML models on-demand...")
         checkpoint_dir = "checkpoints"
         encoder_path = os.path.join(checkpoint_dir, "encoder_best.pt")
         decoder_path = os.path.join(checkpoint_dir, "decoder_best.pt")
@@ -33,6 +36,7 @@ class InferenceEngine:
             return
 
         try:
+            import gc
             # Load word map
             with open(word_map_path, 'r') as j:
                 self.word_map = json.load(j)
@@ -44,9 +48,8 @@ class InferenceEngine:
             self.encoder.load_state_dict(torch.load(encoder_path, map_location=self.device, weights_only=True))
             self.encoder.to(self.device)
             self.encoder.eval()
+            gc.collect()
 
-            # The exact kwargs for decoder initialization should match training config
-            # Defaulting to typically used values
             self.decoder = AttentionLSTMDecoder(
                 attention_dim=512,
                 embed_dim=512,
@@ -57,12 +60,16 @@ class InferenceEngine:
             self.decoder.load_state_dict(torch.load(decoder_path, map_location=self.device, weights_only=True))
             self.decoder.to(self.device)
             self.decoder.eval()
+            gc.collect()
 
             print("Model loaded successfully.")
         except Exception as e:
             print(f"Error loading model: {e}")
 
     def caption(self, image_path: str):
+        if self.encoder is None or self.decoder is None or self.word_map is None:
+            self.load_model()
+
         if self.encoder is None or self.decoder is None or self.word_map is None:
             # Mock mode
             import time
