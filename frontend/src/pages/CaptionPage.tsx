@@ -150,7 +150,7 @@ export function CaptionPage() {
               className="ml-4 inline-flex items-center space-x-1.5 whitespace-nowrap px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
             >
               <LogIn size={14} />
-              <span>Sign In (admin / admin123)</span>
+              <span>Sign In</span>
             </Link>
           )}
         </div>
