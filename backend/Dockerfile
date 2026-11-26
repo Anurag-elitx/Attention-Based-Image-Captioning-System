@@ -2,6 +2,13 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Constrain glibc malloc arenas and PyTorch/OpenBLAS thread pools for 512MB containers
+ENV MALLOC_ARENA_MAX=2 \
+    OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
 # Install system dependencies (needed for psycopg2, opencv, git clone, etc.)
 RUN apt-get update && apt-get install -y \
     gcc \

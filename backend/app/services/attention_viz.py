@@ -1,12 +1,7 @@
 import os
 import uuid
 from typing import List, Tuple
-try:
-    from PIL import Image
-    from ml.visualize_attention import generate_attention_overlays, generate_attention_gif
-    VIZ_AVAILABLE = True
-except ImportError:
-    VIZ_AVAILABLE = False
+VIZ_AVAILABLE = False
 
 class AttentionVizService:
     def __init__(self, output_dir: str = "data/outputs"):

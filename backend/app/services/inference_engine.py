@@ -49,6 +49,7 @@ class InferenceEngine:
 
         try:
             import gc
+            torch.set_num_threads(1)
             # Load word map
             with open(word_map_path, 'r') as j:
                 self.word_map = json.load(j)
@@ -78,6 +79,13 @@ class InferenceEngine:
             )
             self.decoder.to(self.device)
             self.decoder.eval()
+            if self.device.type == "cpu":
+                try:
+                    self.decoder = torch.ao.quantization.quantize_dynamic(
+                        self.decoder, {torch.nn.Linear}, dtype=torch.qint8
+                    )
+                except Exception as q_err:
+                    print(f"Dynamic quantization skipped: {q_err}")
             gc.collect()
 
             print("Model loaded successfully.")
