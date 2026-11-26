@@ -8,12 +8,13 @@ class Encoder(nn.Module):
     Removes the last two layers (avgpool and fc) to output a spatial feature map
     of size 14x14x2048 for an input of size 224x224.
     """
-    def __init__(self, encoded_image_size=14):
+    def __init__(self, encoded_image_size=14, pretrained=True):
         super(Encoder, self).__init__()
         self.enc_image_size = encoded_image_size
         
-        # Load pretrained ResNet-101
-        resnet = models.resnet101(weights=models.ResNet101_Weights.IMAGENET1K_V1)
+        # Load ResNet-101 (skip ImageNet download/allocation when loading a full checkpoint)
+        weights = models.ResNet101_Weights.IMAGENET1K_V1 if pretrained else None
+        resnet = models.resnet101(weights=weights)
         
         # Remove linear and pool layers
         modules = list(resnet.children())[:-2]

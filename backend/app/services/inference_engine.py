@@ -7,7 +7,15 @@ from ml.decoder import AttentionLSTMDecoder
 from ml.inference import caption_image_beam_search
 from app.config import settings
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+def _resolve_checkpoint_dir(raw_dir_str: str) -> str:
+    raw_dir = Path(raw_dir_str)
+    if raw_dir.is_absolute() or raw_dir.exists():
+        return str(raw_dir)
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / raw_dir
+        if candidate.exists():
+            return str(candidate)
+    return str(raw_dir)
 
 class InferenceEngine:
     _instance = None
@@ -29,13 +37,7 @@ class InferenceEngine:
             return
             
         print("Loading ML models on-demand...")
-        raw_dir = Path(settings.CHECKPOINT_DIR)
-        if raw_dir.is_absolute():
-            checkpoint_dir = str(raw_dir)
-        elif raw_dir.exists():
-            checkpoint_dir = str(raw_dir)
-        else:
-            checkpoint_dir = str(REPO_ROOT / raw_dir)
+        checkpoint_dir = _resolve_checkpoint_dir(settings.CHECKPOINT_DIR)
 
         encoder_path = os.path.join(checkpoint_dir, "encoder_best.pt")
         decoder_path = os.path.join(checkpoint_dir, "decoder_best.pt")
@@ -53,9 +55,12 @@ class InferenceEngine:
             self.rev_word_map = {v: k for k, v in self.word_map.items()}
             self.vocab_size = len(self.word_map)
 
-            # Initialize and load models
-            self.encoder = Encoder()
-            self.encoder.load_state_dict(torch.load(encoder_path, map_location=self.device, weights_only=True))
+            # Initialize and load models (skip ImageNet download and use mmap/assign to minimize RAM)
+            self.encoder = Encoder(pretrained=False)
+            self.encoder.load_state_dict(
+                torch.load(encoder_path, map_location=self.device, weights_only=True, mmap=True),
+                assign=True,
+            )
             self.encoder.to(self.device)
             self.encoder.eval()
             gc.collect()
@@ -67,7 +72,10 @@ class InferenceEngine:
                 vocab_size=self.vocab_size,
                 dropout=0.5
             )
-            self.decoder.load_state_dict(torch.load(decoder_path, map_location=self.device, weights_only=True))
+            self.decoder.load_state_dict(
+                torch.load(decoder_path, map_location=self.device, weights_only=True, mmap=True),
+                assign=True,
+            )
             self.decoder.to(self.device)
             self.decoder.eval()
             gc.collect()
