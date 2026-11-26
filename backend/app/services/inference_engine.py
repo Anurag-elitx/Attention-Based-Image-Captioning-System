@@ -1,10 +1,13 @@
 import os
 import json
+from pathlib import Path
 import torch
 from ml.encoder import Encoder
 from ml.decoder import AttentionLSTMDecoder
 from ml.inference import caption_image_beam_search
 from app.config import settings
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 class InferenceEngine:
     _instance = None
@@ -26,7 +29,14 @@ class InferenceEngine:
             return
             
         print("Loading ML models on-demand...")
-        checkpoint_dir = "checkpoints"
+        raw_dir = Path(settings.CHECKPOINT_DIR)
+        if raw_dir.is_absolute():
+            checkpoint_dir = str(raw_dir)
+        elif raw_dir.exists():
+            checkpoint_dir = str(raw_dir)
+        else:
+            checkpoint_dir = str(REPO_ROOT / raw_dir)
+
         encoder_path = os.path.join(checkpoint_dir, "encoder_best.pt")
         decoder_path = os.path.join(checkpoint_dir, "decoder_best.pt")
         word_map_path = os.path.join(checkpoint_dir, "word_map.json")

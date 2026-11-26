@@ -37,7 +37,10 @@ build/
 .env.local
 
 # ML / Data
-data/
+/data/
+/backend/data/
+*.sqlite
+*.db
 checkpoints/
 *.pt
 *.pth

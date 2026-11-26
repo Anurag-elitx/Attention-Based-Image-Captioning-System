@@ -5,6 +5,7 @@ import uuid
 import os
 
 from app.models.caption import CaptionRecord
+from app.services.caption_adapter import CaptionAdapterService
 from app.services.inference_engine import engine
 from app.services.attention_viz import viz_service
 
@@ -15,18 +16,29 @@ class CaptionService:
         user_id: uuid.UUID, 
         image_path: str, 
         filename: str,
-        image_url: Optional[str] = None
+        image_url: Optional[str] = None,
+        language: str = "English (US)",
+        tone: str = "Default",
+        length: str = "Default",
     ) -> Tuple[CaptionRecord, List[Dict[str, Any]]]:
         start_time = time.time()
         
-        # 1. Run inference
+        # 1. Run Attention-LSTM inference for base visual description
         caption_tokens, alphas, confidence = engine.caption(image_path)
-        inference_time = int((time.time() - start_time) * 1000)
         
         # Clean up caption tokens
         clean_caption = " ".join([t for t in caption_tokens if t not in ["<start>", "<end>", "<pad>"]])
+
+        # 2. Adapt base caption into editorial title + 8 platform-tuned captions (Option A)
+        title, platform_captions = CaptionAdapterService.adapt(
+            base_caption=clean_caption,
+            language=language,
+            tone=tone,
+            length=length,
+        )
+        inference_time = int((time.time() - start_time) * 1000)
         
-        # 2. Extract structured attention data for each token
+        # 3. Extract structured attention data for each token
         attention_data = []
         if alphas:
             for idx, token in enumerate(caption_tokens):
@@ -36,12 +48,17 @@ class CaptionService:
                         a_list = a.tolist() if hasattr(a, 'tolist') else list(a)
                         attention_data.append({"word": token, "alpha": a_list})
                         
-        # 3. Save to database
+        # 4. Save to database
         db_caption = CaptionRecord(
             user_id=user_id,
             image_path=image_url or image_path,
             image_filename=filename,
             caption_text=clean_caption,
+            title=title,
+            language=language,
+            tone=tone,
+            length=length,
+            platform_captions=platform_captions,
             confidence=confidence,
             beam_width=engine.beam_width,
             device=str(engine.device),

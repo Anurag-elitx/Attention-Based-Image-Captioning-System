@@ -2,9 +2,8 @@ import uuid
 from datetime import datetime, timezone
 from sqlmodel import SQLModel, Field, Relationship
 from typing import List, Optional
-from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import JSON
-from typing import Any
+from sqlalchemy import Column, JSON
+from typing import Any, Dict, List, Optional
 
 class CaptionRecord(SQLModel, table=True):
     __tablename__ = "caption_record"
@@ -14,6 +13,11 @@ class CaptionRecord(SQLModel, table=True):
     image_path: Optional[str] = None
     image_filename: str
     caption_text: str
+    title: Optional[str] = None
+    language: str = Field(default="English (US)")
+    tone: str = Field(default="Default")
+    length: str = Field(default="Default")
+    platform_captions: Optional[Dict[str, str]] = Field(default=None, sa_column=Column(JSON))
     confidence: float
     beam_width: int = Field(default=5)
     inference_time_ms: int

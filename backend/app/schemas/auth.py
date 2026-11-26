@@ -13,6 +13,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     role: str
+    credits: int = 10
     is_active: bool
     created_at: datetime
 

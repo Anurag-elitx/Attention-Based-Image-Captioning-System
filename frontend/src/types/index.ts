@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email: string;
   role: 'user' | 'admin';
+  credits?: number;
   is_active?: boolean;
   created_at?: string;
 }
@@ -31,6 +32,11 @@ export interface AttentionWord {
 export interface CaptionResponse {
   id: string;
   caption_text: string;
+  title?: string | null;
+  language?: string;
+  tone?: string;
+  length?: string;
+  platform_captions?: Record<string, string> | null;
   confidence: number;
   inference_time_ms: number;
   image_url?: string | null;

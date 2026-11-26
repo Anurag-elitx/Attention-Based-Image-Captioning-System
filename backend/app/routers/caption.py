@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, File, status, Query
 from sqlmodel import Session
 import uuid
 import os
@@ -15,9 +15,19 @@ router = APIRouter()
 @router.post("/", response_model=CaptionResponse)
 async def create_caption(
     file: UploadFile = File(...),
+    language: str = Form("English (US)"),
+    tone: str = Form("Default"),
+    length: str = Form("Default"),
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
+    # Check available credits
+    if current_user.credits < 1:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Out of credits. Upgrade your plan to continue.",
+        )
+
     # Validate file type
     if not file.content_type or not file.content_type.startswith('image/'):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File provided is not an image.")
@@ -42,12 +52,25 @@ async def create_caption(
             user_id=current_user.id,
             image_path=saved_path,
             filename=file.filename or unique_name,
-            image_url=image_web_url
+            image_url=image_web_url,
+            language=language,
+            tone=tone,
+            length=length,
         )
+
+        # Deduct 1 credit per image generation
+        current_user.credits = max(0, current_user.credits - 1)
+        session.add(current_user)
+        session.commit()
             
         return {
             "id": caption_record.id,
             "caption_text": caption_record.caption_text,
+            "title": caption_record.title,
+            "language": caption_record.language,
+            "tone": caption_record.tone,
+            "length": caption_record.length,
+            "platform_captions": caption_record.platform_captions,
             "confidence": caption_record.confidence,
             "inference_time_ms": caption_record.inference_time_ms,
             "image_url": caption_record.image_path,
@@ -74,6 +97,11 @@ def get_history(
         {
             "id": r.id,
             "caption_text": r.caption_text,
+            "title": r.title,
+            "language": r.language,
+            "tone": r.tone,
+            "length": r.length,
+            "platform_captions": r.platform_captions,
             "confidence": r.confidence,
             "inference_time_ms": r.inference_time_ms,
             "image_url": r.image_path,

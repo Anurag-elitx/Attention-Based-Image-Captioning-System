@@ -1,0 +1,70 @@
+{
+  "colors": {
+    "background": {
+      "ink": "#0a0a0b",
+      "ink2": "#101013",
+      "ink3": "#17171b",
+      "surface": "#101013",
+      "surfaceAlt": "#17171b",
+      "paperCard": "#f5f3ec"
+    },
+    "border": {
+      "line": "#23232a",
+      "line2": "#2e2e37",
+      "dashed": "#2e2e37",
+      "focus": "#c8ff4d"
+    },
+    "text": {
+      "paper": "#f5f3ec",
+      "paperDim": "#b8b5ac",
+      "muted": "#888891",
+      "ink": "#0a0a0b"
+    },
+    "accent": {
+      "lime": "#c8ff4d",
+      "limeInk": "#0a0a0b",
+      "limeGradient": "linear-gradient(90deg, #C8FF4D, #8CE000)",
+      "limeMuted": "rgba(200, 255, 77, 0.12)",
+      "limeSubtle": "rgba(200, 255, 77, 0.08)"
+    },
+    "networks": {
+      "instagram": { "bg": "#C13584", "ink": "#FFFFFF" },
+      "facebook": { "bg": "#1877F2", "ink": "#FFFFFF" },
+      "tiktok": { "bg": "#FE2C55", "ink": "#FFFFFF" },
+      "twitter": { "bg": "#000000", "ink": "#FFFFFF" },
+      "snapchat": { "bg": "#FFFC00", "ink": "#0A0A0B" },
+      "linkedin": { "bg": "#0A66C2", "ink": "#FFFFFF" },
+      "threads": { "bg": "#0A0A0B", "ink": "#F5F3EC" },
+      "whatsapp": { "bg": "#25D366", "ink": "#0A0A0B" }
+    }
+  },
+  "gradients": {
+    "pageAmbient": "radial-gradient(1100px 600px at 85% -10%, #1877f20d, transparent 60%), radial-gradient(1000px 700px at -5% 10%, #c8ff4d14, transparent 60%), #0a0a0b"
+  },
+  "typography": {
+    "fontFamilies": {
+      "serif": "'Instrument Serif', Georgia, serif",
+      "sans": "'Geist', 'Inter', system-ui, -apple-system, sans-serif",
+      "mono": "'Geist Mono', ui-monospace, monospace"
+    },
+    "googleFontsImport": "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
+  },
+  "spacing": {
+    "containerMaxWidth": "1200px",
+    "containerMaxWidthXl": "1240px",
+    "containerPaddingDesktop": "32px",
+    "containerPaddingTablet": "24px",
+    "containerPaddingMobile": "18px"
+  },
+  "borderRadius": {
+    "button": "9999px",
+    "card": "24px",
+    "pricingCard": "22px",
+    "input": "12px",
+    "pill": "9999px"
+  },
+  "shadows": {
+    "heroDemo": "0 30px 80px rgba(0, 0, 0, 0.5)",
+    "menu": "0 24px 48px rgba(0, 0, 0, 0.55)"
+  }
+}

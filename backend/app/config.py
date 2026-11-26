@@ -12,7 +12,9 @@ class Settings(BaseSettings):
     HF_TOKEN: str = ""
     CHECKPOINT_DIR: str = "checkpoints"
     STATIC_OUTPUT_DIR: str = "data/outputs"
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore")
 
 settings = Settings()

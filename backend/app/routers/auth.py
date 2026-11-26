@@ -34,7 +34,9 @@ def register(user: UserCreate, session: Session = Depends(get_session)):
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
-    statement = select(User).where(User.username == form_data.username)
+    statement = select(User).where(
+        (User.username == form_data.username) | (User.email == form_data.username)
+    )
     user = session.exec(statement).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
