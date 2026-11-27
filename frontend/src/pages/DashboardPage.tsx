@@ -20,13 +20,14 @@ import { useAuth } from '../hooks/useAuth';
 import type { CaptionResponse } from '../types';
 
 export function DashboardPage() {
-  const { user, isAuthenticated, isLoading, refreshUser } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [language, setLanguage] = useState('English (US)');
   const [tone, setTone] = useState('Default');
   const [length, setLength] = useState('Default');
+  const [sessionCredits, setSessionCredits] = useState<number>(MOCK_DASHBOARD_STATS.creditsLeft);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
@@ -48,7 +49,7 @@ export function DashboardPage() {
       .catch(() => {});
   }, [isAuthenticated]);
 
-  const creditsLeft = user?.credits ?? MOCK_DASHBOARD_STATS.creditsLeft;
+  const creditsLeft = sessionCredits;
 
   const statsCells = [
     {
@@ -109,7 +110,7 @@ export function DashboardPage() {
       });
       setActiveResult(result);
       setCollections((prev) => [result, ...prev]);
-      await refreshUser();
+      setSessionCredits((prev) => Math.max(0, prev - 1));
     } catch (err: unknown) {
       setModalOpen(false);
       const detail =

@@ -21,13 +21,6 @@ async def create_caption(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    # Check available credits
-    if current_user.credits < 1:
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail="Out of credits. Upgrade your plan to continue.",
-        )
-
     # Validate file type
     if not file.content_type or not file.content_type.startswith('image/'):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File provided is not an image.")
@@ -57,11 +50,6 @@ async def create_caption(
             tone=tone,
             length=length,
         )
-
-        # Deduct 1 credit per image generation
-        current_user.credits = max(0, current_user.credits - 1)
-        session.add(current_user)
-        session.commit()
             
         return {
             "id": caption_record.id,
