@@ -35,6 +35,7 @@ class CaptionService:
             language=language,
             tone=tone,
             length=length,
+            image_path=image_path,
         )
         inference_time = int((time.time() - start_time) * 1000)
         

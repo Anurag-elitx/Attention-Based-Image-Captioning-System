@@ -1,6 +1,8 @@
+import base64
 import json
+import mimetypes
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import httpx
 from app.config import settings
 
@@ -96,6 +98,70 @@ TOPIC_PRESETS: List[Tuple[Tuple[str, ...], Dict[str, Any]]] = [
             "li": "Great meals and intentional breaks are underrated fuel for sustained focus.",
         },
     ),
+    (
+        ("dark", "night", "crowd", "party", "club", "concert", "stage", "lights", "neon", "bar"),
+        {
+            "title": "Electric Nights & Neon Lights",
+            "emojis": "🪩✨🔥",
+            "hashtags": "#Nightlife #AfterHours #ElectricVibes #GoodEnergy #WeekendMood",
+            "ig": "Lost in the music, lit by neon, and surrounded by the best energy. Nights like this never get old.",
+            "tt": "POV: The beat drops and nobody is checking their phone. Drop a 🔥 if you needed a night like this!",
+            "fb": "There's nothing like a packed room, good music, and unforgettable energy. Who are you bringing next weekend?",
+            "x": "late nights, loud music, zero regrets.",
+            "th": "some nights just hit different when the lights go down.",
+            "wa": "You should have been here tonight—the energy is unreal!",
+            "sn": "After hours energy!",
+            "li": "Shared experiences and high-energy moments remind us why community matters outside the daily grind.",
+        },
+    ),
+    (
+        ("city", "street", "building", "urban", "skyline", "bridge", "car", "road", "traffic"),
+        {
+            "title": "City Pulse in Motion",
+            "emojis": "🏙️✨",
+            "hashtags": "#CityVibes #UrbanExploration #StreetStyle #Cityscape #Wanderlust",
+            "ig": "Every corner has a story if you slow down long enough to catch the light.",
+            "tt": "POV: Main character walk through the city at golden hour. Which city is this giving?",
+            "fb": "There is something timeless about city streets in motion. What's your favorite city to explore on foot?",
+            "x": "concrete, skyline, and nowhere I'd rather wander.",
+            "th": "city energy hits different when you take the scenic route.",
+            "wa": "Out exploring the city today—had to send this view!",
+            "sn": "City mode activated!",
+            "li": "Big cities are built on ambition, movement, and ideas colliding in real time.",
+        },
+    ),
+    (
+        ("sunset", "sunrise", "sky", "cloud", "forest", "tree", "park", "flower", "nature", "lake", "river"),
+        {
+            "title": "Golden Light & Stillness",
+            "emojis": "🌅🌿✨",
+            "hashtags": "#NatureLovers #GoldenHour #ChasingLight #Outdoors #PeacefulVibes",
+            "ig": "When the sky puts on a show like this, everything else can wait.",
+            "tt": "POV: Nature casually reminding you to put the phone down and breathe. Rate this view 1-10!",
+            "fb": "Moments outdoors have a way of resetting everything. Where do you go to unwind?",
+            "x": "no filter needed when the light does all the work.",
+            "th": "stepping outside for ten minutes fixes more than we admit.",
+            "wa": "Look at this view right now—needed to share this!",
+            "sn": "Nature therapy!",
+            "li": "Stepping outside to reset perspective is one of the highest-ROI habits in any week.",
+        },
+    ),
+    (
+        ("smile", "smiling", "portrait", "selfie", "friends", "group", "people", "standing", "sitting", "couple"),
+        {
+            "title": "Good Company, Great Energy",
+            "emojis": "✨🥂",
+            "hashtags": "#GoodVibes #CoreMemories #WithMyPeople #MomentsThatMatter",
+            "ig": "Surrounded by the right people, even an ordinary day turns into a core memory.",
+            "tt": "POV: You're with the people who make every plan 10x funnier. Tag your crew!",
+            "fb": "Life is better when you share the moment with great company. Tag someone you're grateful for today!",
+            "x": "good people, good energy, zero complaints.",
+            "th": "the best moments are never the ones you overplan.",
+            "wa": "Best crew, best day!",
+            "sn": "Vibes on point right now!",
+            "li": "Great teams and great friendships share the same foundation: trust, energy, and showing up.",
+        },
+    ),
 ]
 
 
@@ -152,23 +218,33 @@ class CaptionAdapterService:
                     }
                 return preset["title"], captions
 
-        scene = _humanize_scene(base_caption)
         title = _build_generic_title(base_caption)
         t = tone.lower()
-        hook = (
-            f"Main character moment: {scene}."
-            if t in ("witty", "humorous", "playful", "sarcastic")
-            else f"Capturing the energy of {scene}."
-        )
+        is_playful = t in ("witty", "humorous", "playful", "sarcastic")
+        if length == "Short":
+            return title, {
+                "instagram": "Unfiltered energy, captured at the exact right second. ✨ #Moments #DailyVibes #Captured",
+                "tiktok": "POV: When the vibe is too good not to post. ✨ #Vibes #FYP",
+                "facebook": "Some moments are too good to keep in the camera roll.",
+                "twitter": "no caption needed—just pure energy." if is_playful else "some moments speak for themselves.",
+                "threads": "honestly, this kind of energy hits different today.",
+                "whatsapp": "Had to share this moment with you ✨",
+                "snapchat": "Right now energy 🔥",
+                "linkedin": "Staying present and noticing the details that make the journey worthwhile. #Perspective",
+            }
         return title, {
-            "instagram": f"{hook} ✨ #Moments #DailyVibes #Captured",
-            "tiktok": f"POV: {scene} ✨ #Vibes #FYP",
-            "facebook": f"{hook} What does this remind you of?",
-            "twitter": f"{scene} — some moments speak for themselves.",
-            "threads": f"honestly, {scene} hits different today.",
-            "whatsapp": f"Look at this: {scene} ✨",
-            "snapchat": f"Right now: {scene} 🔥",
-            "linkedin": f"Moments like {scene} remind us to pause, observe, and stay present. #Perspective",
+            "instagram": (
+                "Main character energy—some frames just capture the mood better than words ever could. ✨ #Moments #DailyVibes #Captured"
+                if is_playful
+                else "Caught in the moment, holding onto the energy long after it passed. ✨ #Moments #DailyVibes #Captured"
+            ),
+            "tiktok": "POV: You almost didn't take the photo, and now it's your favorite one. Drop a 🔥 if you feel this! #Vibes #FYP",
+            "facebook": "Some frames deserve a permanent spot on the feed—what's the story behind your favorite photo this week?",
+            "twitter": "living for moments that don't need a long explanation." if is_playful else "some moments speak louder than any caption.",
+            "threads": "honestly, moments like this hit different when you're actually present for them.",
+            "whatsapp": "Look at this shot—had to send it right away ✨",
+            "snapchat": "Mood of the moment! 🔥",
+            "linkedin": "The best moments remind us to pause, observe, and bring full presence to what's in front of us. #Perspective #Mindset",
         }
 
     @classmethod
@@ -178,6 +254,7 @@ class CaptionAdapterService:
         language: str = "English (US)",
         tone: str = "Default",
         length: str = "Default",
+        image_path: Optional[str] = None,
     ) -> Tuple[str, Dict[str, str]]:
         api_key = (settings.GEMINI_API_KEY or "").strip()
         if not api_key:
@@ -222,8 +299,24 @@ class CaptionAdapterService:
                 f"{settings.GEMINI_MODEL}:generateContent"
             )
 
+        parts: List[Dict[str, Any]] = [{"text": prompt}]
+        if image_path:
+            try:
+                with open(image_path, "rb") as img_file:
+                    raw_bytes = img_file.read()
+                if len(raw_bytes) <= 4 * 1024 * 1024:
+                    mime, _ = mimetypes.guess_type(image_path)
+                    parts.append({
+                        "inline_data": {
+                            "mime_type": mime or "image/jpeg",
+                            "data": base64.b64encode(raw_bytes).decode("ascii"),
+                        }
+                    })
+            except OSError:
+                pass
+
         payload = {
-            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "contents": [{"role": "user", "parts": parts}],
             "generationConfig": {
                 "temperature": 0.75,
             },
