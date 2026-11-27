@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Check, Copy, Download, Trash2, X } from 'lucide-react';
+import { resolveAssetUrl } from '../../api/client';
 import { NETWORKS, type NetworkId } from '../../config/site';
 import type { CaptionResponse } from '../../types';
 import { NetIcon } from './NetIcon';
@@ -73,7 +74,7 @@ export function GenerationModal({
 
   if (!open) return null;
 
-  const displayImage = imageUrl || result?.image_url || '';
+  const displayImage = resolveAssetUrl(imageUrl || result?.image_url);
   const displayLang = result?.language || language;
   const displayTone = result?.tone || tone;
   const displayLength = result?.length || length;
@@ -188,6 +189,9 @@ export function GenerationModal({
                   <img
                     src={displayImage}
                     alt={titleText}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                     className={`h-full w-full object-cover transition-all duration-500 ${
                       isGenerating ? 'scale-[1.02] brightness-90' : ''
                     }`}

@@ -8,6 +8,24 @@ const API_BASE = (rawApiBase.startsWith('http') && !rawApiBase.endsWith('/api/v1
   ? `${rawApiBase}/api/v1`
   : rawApiBase;
 
+const API_ORIGIN = API_BASE.startsWith('http')
+  ? API_BASE.replace(/\/api\/v1$/, '')
+  : '';
+
+export function resolveAssetUrl(path?: string | null): string {
+  if (!path) return '';
+  if (
+    path.startsWith('http://') ||
+    path.startsWith('https://') ||
+    path.startsWith('blob:') ||
+    path.startsWith('data:')
+  ) {
+    return path;
+  }
+  if (!API_ORIGIN) return path;
+  return `${API_ORIGIN}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
 const client = axios.create({
   baseURL: API_BASE,
   headers: {

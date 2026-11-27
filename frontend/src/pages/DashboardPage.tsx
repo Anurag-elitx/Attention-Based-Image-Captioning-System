@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import { captionApi } from '../api/caption';
+import { resolveAssetUrl } from '../api/client';
 import { CollectionsToolbar } from '../components/capgen/CollectionsToolbar';
 import { Dropzone } from '../components/capgen/Dropzone';
 import { Footer } from '../components/capgen/Footer';
@@ -277,8 +278,11 @@ export function DashboardPage() {
                     <div className="flex items-start gap-3.5">
                       {item.image_url && (
                         <img
-                          src={item.image_url}
+                          src={resolveAssetUrl(item.image_url)}
                           alt={item.caption_text}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
                           className="border-line h-16 w-16 shrink-0 rounded-xl border object-cover"
                         />
                       )}
@@ -337,7 +341,7 @@ export function DashboardPage() {
       <GenerationModal
         open={modalOpen}
         isGenerating={isGenerating}
-        imageUrl={activeResult?.image_url || previewUrl}
+        imageUrl={resolveAssetUrl(activeResult?.image_url) || previewUrl}
         fileName={fileName}
         language={language}
         tone={tone}
