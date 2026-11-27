@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlmodel import Session, select
 from fastapi.security import OAuth2PasswordRequestForm
 from app.database import get_session
@@ -11,21 +12,24 @@ router = APIRouter()
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user: UserCreate, session: Session = Depends(get_session)):
-    statement = select(User).where(User.username == user.username)
+    clean_username = user.username.strip()
+    clean_email = user.email.strip().lower()
+
+    statement = select(User).where(func.lower(User.username) == clean_username.lower())
     existing_user = session.exec(statement).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")
         
-    statement = select(User).where(User.email == user.email)
+    statement = select(User).where(func.lower(User.email) == clean_email)
     existing_email = session.exec(statement).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
         
     hashed_password = get_password_hash(user.password)
     db_user = User(
-        username=user.username, 
-        email=user.email, 
-        hashed_password=hashed_password
+        username=clean_username,
+        email=clean_email,
+        hashed_password=hashed_password,
     )
     session.add(db_user)
     session.commit()
@@ -34,8 +38,9 @@ def register(user: UserCreate, session: Session = Depends(get_session)):
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
+    identifier = form_data.username.strip().lower()
     statement = select(User).where(
-        (User.username == form_data.username) | (User.email == form_data.username)
+        (func.lower(User.username) == identifier) | (func.lower(User.email) == identifier)
     )
     user = session.exec(statement).first()
     
